@@ -8,8 +8,8 @@
 int main(int argc, char *argv[]) {
 
 	int	servSockId, clntSockId;
-	struct sockaddr_in	servSock;
-	int servPort;
+	struct sockaddr_in	servSockAddr, clntSockAddr;
+	int servPort, clntAddrLen;
 	int retStatus;
 
 	/* Check for cmd line options */
@@ -27,20 +27,46 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	/* Initialize Server sockaddr_in */
+	/* Initialize Server sockaddr_in. User INADDR_ANY to bind to
+		 all local addresses */
 	servPort = atoi(argv[1]);
-	bzero(&servSock, sizeof(servSock));
-	servSock.sin_family = AF_INET;
-	servSock.sin_addr.s_addr = htonl(INADDR_ANY);
-	servSock.sin_port = htons(servPort);
+	bzero(&servSockAddr, sizeof(servSockAddr));
+	servSockAddr.sin_family = AF_INET;
+	servSockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servSockAddr.sin_port = htons(servPort);
 
 	/* Bind server sock */
-	retStatus = bind(servSockId, (struct sockaddr *) &servSock, sizeof(servSock));
-	if(retStatus != -1) {
-		fprintf(stdout, "Server Socket Bound to addr : %u, port : %d\n", servSock.sin_addr.s_addr, servSock.sin_port);
+	retStatus = bind(servSockId, (struct sockaddr *) &servSockAddr, 
+																							sizeof(servSockAddr));
+	if(retStatus == 0) {
+		fprintf(stdout, "Server Socket Bound to addr : %u, port : %d\n", 
+													servSockAddr.sin_addr.s_addr, servSockAddr.sin_port);
 	} else {
 		fprintf(stderr, "Couldn't bind server socket\n");
+		close(servSockId);
 		exit(1);
+	}
+
+	/* Listen for connections */
+	retStatus = listen(servSockId, 5);
+	if(retStatus == -1) {
+		fprintf(stderr, "Couldn't listen for connections\n");
+		close(servSockId);
+	}
+	fprintf(stdout, "Started listening for connections\n");
+
+	/* Accept incoming connections */
+	while(1) {
+		bzero(&clntSockAddr, sizeof(clntSockAddr));
+		clntAddrLen = sizeof(clntSockAddr);
+		clntSockId = accept(servSockId, (struct sockaddr *) &clntSockAddr,
+														&clntAddrLen);
+		if(clntSockId == -1) {
+			fprintf(stderr, "Couldn't accept connection\n");
+			close(servSockId);
+			exit(1);
+		}
+		
 	}
 	return 0;
 
