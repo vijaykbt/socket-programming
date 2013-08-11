@@ -32,6 +32,23 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+	/* Initialize Client sockaddr_in. User INADDR_ANY to bind to
+		 all local addresses */
+	bzero(&clntSockAddr, sizeof(clntSockAddr));
+	clntSockAddr.sin_family = AF_INET;
+	clntSockAddr.sin_addr.s_addr = INADDR_ANY;
+	clntSockAddr.sin_port = 0;
+
+	/* bind client socket */
+	retStatus = bind(clntSockId, (struct sockaddr *)&clntSockAddr, 
+								sizeof(clntSockAddr));
+	if(retStatus == 0) {
+		fprintf(stdout, "bind client socket\n");
+	} else {
+		fprintf(stderr, "Couldn't bind client socket\n");
+		exit(1);
+	}
+
 	/* Initialize Server sockaddr_in. User INADDR_ANY to bind to
 		 all local addresses */
 	servPort = atoi(argv[2]);
