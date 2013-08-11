@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<netdb.h>
 #include<strings.h>
+#include<string.h>
 
 
 int main(int argc, char *argv[]) {
@@ -12,7 +13,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in	servSockAddr, clntSockAddr;
 	int servPort, clntAddrLen;
 	int retStatus;
-	char* msg = "Hello from server";
+	const char msg[] = "Hello from server";
 
 	/* Check for cmd line options */
 	if (argc != 2) {
@@ -68,8 +69,18 @@ int main(int argc, char *argv[]) {
 			close(servSockId);
 			exit(1);
 		}
+		fprintf(stdout, "Accepted connection from client - %u:%d\n", 
+						clntSockAddr.sin_addr.s_addr, clntSockAddr.sin_port);
 		/* Handle Client connection */
-		write(clntSockId, msg, sizeof(msg));
+		retStatus = write(clntSockId, msg, strlen(msg));
+		if(retStatus > 0) {
+			fprintf(stdout, "Wrote %d bytes to client\n", retStatus);
+		} else {
+			fprintf(stderr, "Error in writing data to client\n");
+			close(clntSockId);
+			close(servSockId);
+			exit(1);
+		}
 		close(clntSockId);
 	}
 	close(servSockId);

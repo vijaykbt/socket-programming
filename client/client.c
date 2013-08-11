@@ -49,9 +49,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Read data from server */
+	bzero(&buf, sizeof(buf));
 	retStatus = read(clntSockId, buf, sizeof(buf));
 	if(retStatus > 0) {
-		fprintf(stdout, "Received data from server %s\n", buf);
+		fprintf(stdout, "%d Bytes received from server %s\n", retStatus, buf);
 	} else {
 		fprintf(stdout, "Couldn't read data from server\n");
 		close(clntSockId);
