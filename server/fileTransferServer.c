@@ -5,6 +5,7 @@
 #include<netdb.h>
 #include<strings.h>
 #include<string.h>
+#include<fcntl.h>
 
 #define SERVERPORT 4444
 #define MAXBUF 1024
@@ -12,10 +13,12 @@
 int main(int argc, char *argv[]) {
 
 	int	servSockId, clntSockId;
+	int readCounter, writeCounter;
+	int fd;
 	struct sockaddr_in	servSockAddr, clntSockAddr;
 	int servPort, clntAddrLen;
 	int retStatus;
-	char buf[MAXBUF];
+	char buf[MAXBUF], *bufptr;
 
 	/* Check for cmd line options */
 	if (argc != 2) {
@@ -77,6 +80,33 @@ int main(int argc, char *argv[]) {
 		retStatus = read(clntSockId, buf, MAXBUF);
 		if(retStatus > 0) {
 			fprintf(stdout, "File Name Requested : %s\n", buf);
+			fd = open(buf, O_RDONLY);
+			if(fd == -1) {
+				strcpy(buf, "NOT FOUND");
+				retStatus = write(clntSockId, buf, strlen(buf)+1);
+				close(clntSockId);
+			} else {
+				strcpy(buf, "FILE FOUND");
+				retStatus = write(clntSockId, buf, strlen(buf)+1);
+				fprintf(stdout, "starting file transfer\n");
+				while((readCounter = read(fd, buf, MAXBUF)) > 0) {
+					writeCounter = 0;
+					bufptr = buf;
+					while(writeCounter < readCounter) {
+						readCounter -= writeCounter;
+						bufptr += writeCounter;
+						writeCounter = write(clntSockId, bufptr, readCounter);
+						if(writeCounter > 0) {
+							fprintf(stdout, "Sent %d bytes\n", retStatus);
+							fprintf(stdout, "%s\n", buf);
+						} else {
+							fprintf(stdout, "Couldn't send %d bytes\n", writeCounter);
+						}
+					}
+				}
+				fprintf(stdout, "file transfer completed\n");
+				close(fd);
+			}
 		} else {
 			fprintf(stderr, "Error in reading file name from client\n");
 			close(clntSockId);

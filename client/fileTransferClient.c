@@ -5,6 +5,7 @@
 #include<netdb.h>
 #include<strings.h>
 #include<string.h>
+#include<fcntl.h>
 
 #define SERVERPORT 4444
 #define MAXBUF 1024
@@ -12,6 +13,7 @@
 int main(int argc, char *argv[]) {
 
 	int	clntSockId;
+	int fd;
 	struct sockaddr_in	servSockAddr;
 	int servPort;
 	int retStatus;
@@ -52,12 +54,36 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Send file name to server */
-	strcpy(buf, "filename.c");
+	strcpy(buf, "./tcpServer.c");
 	retStatus = write(clntSockId, buf, strlen(buf)+1);
 	if(retStatus > 0) {
 		fprintf(stdout, "File name sent to server : %s\n", buf);
 	} else {
 		fprintf(stdout, "Couldn't send file name to server\n");
+		close(clntSockId);
+		exit(0);
+	}
+	bzero(buf, MAXBUF);
+	retStatus = read(clntSockId, buf, MAXBUF);
+	if(retStatus > 0) {
+		if(strcmp(buf, "FILE FOUND") == 0) {
+			fprintf(stdout, "File found on the server\n");
+			fd = open("./tcpServer.c", 777);
+			bzero(buf, MAXBUF);
+			while((retStatus = read(clntSockId, buf, MAXBUF)) > 0) {
+				write(fd, buf);
+				fprintf(stdout, "Got %d bytes\n", retStatus);
+				fprintf(stdout, "%s\n", buf);
+				bzero(buf, MAXBUF);
+			}
+			close(fd);
+		} else {
+			fprintf(stderr, "File not found on the server\n");
+			close(clntSockId);
+			exit(0);
+		}
+	} else {
+		fprintf(stderr, "Couldn't get file status from server\n");
 		close(clntSockId);
 		exit(0);
 	}
