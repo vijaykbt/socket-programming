@@ -5,12 +5,14 @@
 #include<netdb.h>
 #include<strings.h>
 
+
 int main(int argc, char *argv[]) {
 
 	int	servSockId, clntSockId;
 	struct sockaddr_in	servSockAddr, clntSockAddr;
 	int servPort, clntAddrLen;
 	int retStatus;
+	char* msg = "Hello from server";
 
 	/* Check for cmd line options */
 	if (argc != 2) {
@@ -66,8 +68,11 @@ int main(int argc, char *argv[]) {
 			close(servSockId);
 			exit(1);
 		}
-		
+		/* Handle Client connection */
+		write(clntSockId, msg, sizeof(msg));
+		close(clntSockId);
 	}
+	close(servSockId);
 	return 0;
 
 }
