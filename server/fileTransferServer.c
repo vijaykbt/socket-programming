@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 							fprintf(stdout, "Sent %d bytes\n", retStatus);
 							fprintf(stdout, "%s\n", buf);
 						} else {
-							fprintf(stdout, "Couldn't send %d bytes\n", writeCounter);
+							fprintf(stdout, "*****Couldn't send %d bytes\n*****", writeCounter);
 						}
 					}
 				}
